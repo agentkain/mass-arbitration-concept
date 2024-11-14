@@ -72,11 +72,16 @@ export default function DeclarationPage({ formData, currentDate, signatureData }
         <div className="mt-8">
           <p>Executed on {currentDate}</p>
           {signatureData ? (
-            <div className="mt-4">
-              <img src={signatureData} alt="Signature" className="max-h-20" />
+            <div className="mt-4 w-full">
+              <img 
+                src={signatureData} 
+                alt="Signature" 
+                className="max-h-32 w-full object-contain"
+                style={{ minHeight: '120px' }}
+              />
             </div>
           ) : (
-            <p className="mt-8">By: _______________________________</p>
+            <p className="mt-8 py-8 border-b border-gray-400">By: _______________________________</p>
           )}
           <p className="ml-8">{formData.firstName} {formData.lastName}</p>
         </div>

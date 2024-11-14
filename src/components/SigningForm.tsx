@@ -362,7 +362,14 @@ export default function SigningForm({ isOpen, onClose, formData, onSigningComple
           )}
 
           <div className="flex-1 mb-4 overflow-hidden">
-            <div className="prose max-w-none text-sm leading-relaxed space-y-4 overflow-y-auto h-[50vh] px-4">
+            <div 
+              className="prose max-w-none text-sm leading-relaxed space-y-4 overflow-y-auto px-4" 
+              style={{ 
+                height: '20vh',
+                minHeight: '200px',
+                maxHeight: '30vh'
+              }}
+            >
               {currentPage === 'agreement' ? (
                 <>
                   <h3 className="text-xl font-semibold">Investigation and retention agreement</h3>
@@ -512,7 +519,8 @@ export default function SigningForm({ isOpen, onClose, formData, onSigningComple
             </div>
           </div>
 
-          <div className="border-t pt-4">
+          {/* Signature section */}
+          <div className="border-t pt-4 sticky bottom-0 bg-white">
             <div className="flex space-x-2 mb-4">
               <button
                 onClick={() => handlePageChange('agreement')}
@@ -555,6 +563,9 @@ export default function SigningForm({ isOpen, onClose, formData, onSigningComple
                         backgroundColor: '#fff'
                       }
                     }}
+                    velocityFilterWeight={0.7}
+                    minWidth={0.5}
+                    maxWidth={2.5}
                   />
                 </div>
                 <div className="flex justify-between">

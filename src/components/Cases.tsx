@@ -132,7 +132,7 @@ export default function Cases() {
               {cases.map((caseItem, index) => (
                 <div
                   key={index}
-                  className="w-1/3 flex-shrink-0 px-4"
+                  className="w-full md:w-1/3 flex-shrink-0 px-4"
                 >
                   <a
                     href={caseItem.link}
@@ -160,7 +160,7 @@ export default function Cases() {
               {Array.from({ length: totalPages }).map((_, index) => (
                 <button
                   key={index}
-                  onClick={() => goToPage(index * itemsPerPage)}
+                  onClick={() => goToPage(index)}
                   disabled={isAnimating}
                   className={`w-2 h-2 rounded-full transition-all duration-300 ${
                     Math.floor(currentIndex / itemsPerPage) === index
