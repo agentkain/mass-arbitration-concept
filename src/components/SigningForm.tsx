@@ -367,7 +367,7 @@ export default function SigningForm({ isOpen, onClose, formData, onSigningComple
               style={{ 
                 height: '20vh',
                 minHeight: '200px',
-                maxHeight: '30vh'
+                maxHeight: '20vh'
               }}
             >
               {currentPage === 'agreement' ? (
