@@ -8,6 +8,7 @@ interface FloatingActionProps {
 export default function FloatingAction({ onOpenForm }: FloatingActionProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [isFooterVisible, setIsFooterVisible] = useState(false);
+  const [footerHeight, setFooterHeight] = useState(0);
 
   useEffect(() => {
     // Header observer
@@ -21,10 +22,24 @@ export default function FloatingAction({ onOpenForm }: FloatingActionProps) {
       }
     );
 
-    // Footer observer
-    const footerObserver = new IntersectionObserver(
+    // Function to update footer height and visibility (for mobile only)
+    const updateFooterState = () => {
+      if (window.innerWidth >= 1024) return; // Skip for desktop
+      const footerElement = document.querySelector('footer');
+      if (footerElement) {
+        const footerRect = footerElement.getBoundingClientRect();
+        const isVisible = footerRect.top < window.innerHeight;
+        setIsFooterVisible(isVisible);
+        setFooterHeight(footerElement.offsetHeight);
+      }
+    };
+
+    // Modified footer observer for desktop version
+    const desktopFooterObserver = new IntersectionObserver(
       ([entry]) => {
-        setIsFooterVisible(entry.isIntersecting);
+        if (window.innerWidth >= 1024) {
+          setIsFooterVisible(entry.isIntersecting);
+        }
       },
       {
         threshold: 0,
@@ -39,23 +54,36 @@ export default function FloatingAction({ onOpenForm }: FloatingActionProps) {
       headerObserver.observe(heroElement);
     }
     if (footerElement) {
-      footerObserver.observe(footerElement);
+      desktopFooterObserver.observe(footerElement);
     }
+
+    // Update on scroll for mobile only
+    const handleScroll = () => {
+      if (window.innerWidth < 1024) {
+        requestAnimationFrame(updateFooterState);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', updateFooterState);
+    
+    // Initial calculation
+    updateFooterState();
 
     return () => {
       headerObserver.disconnect();
-      footerObserver.disconnect();
+      desktopFooterObserver.disconnect();
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', updateFooterState);
     };
   }, []);
 
-  const shouldShow = isVisible;
-
   return (
     <>
-      {/* Desktop version - side box */}
+      {/* Desktop version with original behavior */}
       <div 
         className={`hidden lg:block fixed left-4 transition-all duration-300 w-[320px] ${
-          shouldShow ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
         } ${
           isFooterVisible 
             ? 'bottom-[250px]'
@@ -80,15 +108,17 @@ export default function FloatingAction({ onOpenForm }: FloatingActionProps) {
         </div>
       </div>
 
-      {/* Mobile version - bottom band */}
+      {/* Mobile version stays the same */}
       <div 
-        className={`lg:hidden fixed left-0 right-0 transition-all duration-300 ${
-          shouldShow 
-            ? isFooterVisible
-              ? 'bottom-[120px] translate-y-0'
-              : 'bottom-0 translate-y-0'
-            : 'translate-y-full'
+        className={`lg:hidden fixed left-0 right-0 ${
+          isVisible ? 'translate-y-0' : 'translate-y-full'
         }`}
+        style={{ 
+          bottom: isFooterVisible ? `${footerHeight}px` : '0',
+          transition: 'bottom 0.3s ease-in-out',
+          zIndex: 30,
+          position: 'fixed'
+        }}
       >
         <div className="bg-white border-t border-gray-200 shadow-lg px-4 py-3">
           <div className="flex items-center justify-between max-w-md mx-auto">
