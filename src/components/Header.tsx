@@ -1,34 +1,156 @@
-import React, { useState, useEffect } from 'react';
-import { Menu, X } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Menu, X, ChevronDown } from 'lucide-react';
 
-function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
+interface NavItem {
+  label: string;
+  href: string;
+  children?: { label: string; href: string }[];
+}
+
+const navigation: NavItem[] = [
+  {
+    label: "Explore Cases",
+    href: "/explore-cases",
+    children: [
+      { label: "HealthEquity Breach", href: "/cases/health-equity" },
+      { label: "Recent Settlements", href: "/cases/settlements" },
+      { label: "Past Cases", href: "/cases/past" }
+    ]
+  },
+  {
+    label: "About Us",
+    href: "/about",
+    children: [
+      { label: "Our Team", href: "/about/team" },
+      { label: "Our Process", href: "/about/process" },
+      { label: "Results", href: "/about/results" }
+    ]
+  },
+  { label: "Other Cases", href: "/other-cases" },
+  { label: "Blog", href: "/blog" },
+  { label: "Support", href: "/support" }
+];
+
+function NavLink({ item }: { item: NavItem }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleMouseEnter = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    setIsOpen(true);
+  };
+
+  const handleMouseLeave = () => {
+    timeoutRef.current = setTimeout(() => {
+      setIsOpen(false);
+    }, 100);
+  };
+
   return (
-    <a
-      href={href}
-      className="text-gray-300 hover:text-white transition-colors text-sm font-medium"
+    <div 
+      ref={dropdownRef}
+      className="relative group"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
-      {children}
-    </a>
+      <a
+        href={item.href}
+        className="flex items-center text-gray-300 hover:text-white transition-colors text-sm font-medium"
+      >
+        {item.label}
+        {item.children && (
+          <ChevronDown className={`ml-1 w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        )}
+      </a>
+      
+      {item.children && isOpen && (
+        <div 
+          className="absolute left-0 mt-2 py-2 w-48 bg-gray-900 rounded-md shadow-lg ring-1 ring-black ring-opacity-5"
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+        >
+          {item.children.map((child, index) => (
+            <a
+              key={index}
+              href={child.href}
+              className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800"
+            >
+              {child.label}
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
-function MobileNavLink({ 
-  href, 
-  children, 
-  onClick 
-}: { 
-  href: string; 
-  children: React.ReactNode;
-  onClick: () => void;
-}) {
+function MobileNavLink({ item }: { item: NavItem }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const submenuRef = useRef<HTMLDivElement>(null);
+  const [submenuHeight, setSubmenuHeight] = useState<number>(0);
+
+  useEffect(() => {
+    if (submenuRef.current) {
+      setSubmenuHeight(isOpen ? submenuRef.current.scrollHeight : 0);
+    }
+  }, [isOpen]);
+
   return (
-    <a
-      href={href}
-      onClick={onClick}
-      className="block text-gray-300 hover:text-white transition-colors text-lg font-medium px-4"
-    >
-      {children}
-    </a>
+    <div className="py-2">
+      <div className="flex items-center justify-between px-4">
+        <a
+          href={item.href}
+          className="text-gray-300 hover:text-white transition-colors text-lg font-medium"
+        >
+          {item.label}
+        </a>
+        {item.children && (
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="p-1 text-gray-300 hover:text-white"
+          >
+            <ChevronDown className={`w-5 h-5 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+          </button>
+        )}
+      </div>
+      
+      {item.children && (
+        <div 
+          ref={submenuRef}
+          className="mt-2 pl-4 space-y-2 overflow-hidden transition-all duration-300 ease-in-out"
+          style={{ maxHeight: `${submenuHeight}px` }}
+        >
+          {item.children.map((child, index) => (
+            <a
+              key={index}
+              href={child.href}
+              className="block py-2 px-4 text-sm text-gray-300 hover:text-white"
+            >
+              {child.label}
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -86,11 +208,9 @@ export default function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            <NavLink href="/explore-cases">Explore Cases</NavLink>
-            <NavLink href="/about">About Us</NavLink>
-            <NavLink href="/other-cases">Other Cases</NavLink>
-            <NavLink href="/blog">Blog</NavLink>
-            <NavLink href="/support">Support</NavLink>
+            {navigation.map((item, index) => (
+              <NavLink key={index} item={item} />
+            ))}
           </nav>
 
           {/* Mobile menu button */}
@@ -111,26 +231,14 @@ export default function Header() {
         <div
           className={`md:hidden transition-all duration-300 ease-in-out ${
             isMobileMenuOpen
-              ? 'max-h-96 opacity-100'
+              ? 'max-h-[32rem] opacity-100'
               : 'max-h-0 opacity-0 pointer-events-none'
-          }`}
+          } overflow-hidden`}
         >
-          <nav className="py-4 space-y-4">
-            <MobileNavLink href="/explore-cases" onClick={() => setIsMobileMenuOpen(false)}>
-              Explore Cases
-            </MobileNavLink>
-            <MobileNavLink href="/about" onClick={() => setIsMobileMenuOpen(false)}>
-              About Us
-            </MobileNavLink>
-            <MobileNavLink href="/other-cases" onClick={() => setIsMobileMenuOpen(false)}>
-              Other Cases
-            </MobileNavLink>
-            <MobileNavLink href="/blog" onClick={() => setIsMobileMenuOpen(false)}>
-              Blog
-            </MobileNavLink>
-            <MobileNavLink href="/support" onClick={() => setIsMobileMenuOpen(false)}>
-              Support
-            </MobileNavLink>
+          <nav className="py-4">
+            {navigation.map((item, index) => (
+              <MobileNavLink key={index} item={item} />
+            ))}
           </nav>
         </div>
       </div>
