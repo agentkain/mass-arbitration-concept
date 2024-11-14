@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
+import RejectionMessage from './DeclarationForm/RejectionMessage';    
+import SuccessMessage from './DeclarationForm/SuccessMessage';
 
 interface FormData {
   firstName: string;
@@ -209,16 +211,21 @@ export default function DeclarationForm({ isOpen, onClose, onSubmit }: Props) {
     declaresUnderPenalty: '',
     aptSuite: '',
   });
-  const [, setIsSubmitted] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
   const [fieldErrors, setFieldErrors] = useState<Record<string, boolean>>({});
+  const [isRejected, setIsRejected] = useState(false);
 
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitted(true);
-    onSubmit(formData);
+    if (formData.state !== 'CA') {
+      setIsRejected(true);
+    } else {
+      setIsSubmitted(true);
+      onSubmit(formData);
+    }
   };
 
   const handleClose = () => {
@@ -348,253 +355,252 @@ export default function DeclarationForm({ isOpen, onClose, onSubmit }: Props) {
             </button>
           </div>
 
-          <ProgressIndicator currentStep={step} />
-          {errors.length > 0 && (
-            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
-              {errors.map((error, index) => (
-                <p key={index} className="text-red-600 text-sm">{error}</p>
-              ))}
-            </div>
-          )}
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {step === 1 && (
-              <div className="space-y-6">
-                <h3 className="text-lg font-medium text-gray-900">Personal Information and Background</h3>
-                
-                <div className="space-y-4">
-                  <p className="text-sm text-gray-700">Please provide your legal name</p>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <RequiredLabel text="First Name" error={fieldErrors.firstName} />
-                      <input
-                        type="text"
-                        required
-                        className={`w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500
-                          ${fieldErrors.firstName ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
-                        value={formData.firstName}
-                        onChange={(e) => handleInputChange('firstName', e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <RequiredLabel text="Last Name" error={fieldErrors.lastName} />
-                      <input
-                        type="text"
-                        required
-                        className={`w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500
-                          ${fieldErrors.lastName ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
-                        value={formData.lastName}
-                        onChange={(e) => handleInputChange('lastName', e.target.value)}
-                      />
-                    </div>
-                  </div>
+          {isRejected ? (
+            <RejectionMessage onClose={handleClose} />
+          ) : isSubmitted ? (
+            <SuccessMessage onClose={handleClose} />
+          ) : (
+            <>
+              <ProgressIndicator currentStep={step} />
+              {errors.length > 0 && (
+                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
+                  {errors.map((error, index) => (
+                    <p key={index} className="text-red-600 text-sm">{error}</p>
+                  ))}
                 </div>
+              )}
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {step === 1 && (
+                  <div className="space-y-6">
+                    <h3 className="text-lg font-medium text-gray-900">Personal Information and Background</h3>
+                    
+                    <div className="space-y-4">
+                      <p className="text-sm text-gray-700">Please provide your legal name</p>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <RequiredLabel text="First Name" error={fieldErrors.firstName} />
+                          <input
+                            type="text"
+                            required
+                            className={`w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500
+                              ${fieldErrors.firstName ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
+                            value={formData.firstName}
+                            onChange={(e) => handleInputChange('firstName', e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <RequiredLabel text="Last Name" error={fieldErrors.lastName} />
+                          <input
+                            type="text"
+                            required
+                            className={`w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500
+                              ${fieldErrors.lastName ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
+                            value={formData.lastName}
+                            onChange={(e) => handleInputChange('lastName', e.target.value)}
+                          />
+                        </div>
+                      </div>
+                    </div>
 
-                <RadioGroup
-                  name="isOver18"
-                  label="Are you over 18 years of age?"
-                  value={formData.isOver18}
-                  onChange={(value) => handleInputChange('isOver18', value)}
-                  error={fieldErrors.isOver18}
-                />
+                    <RadioGroup
+                      name="isOver18"
+                      label="Are you over 18 years of age?"
+                      value={formData.isOver18}
+                      onChange={(value) => handleInputChange('isOver18', value)}
+                      error={fieldErrors.isOver18}
+                    />
 
-                <div>
-                  <div className="mb-1">
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="md:col-span-2">
+                          <RequiredLabel text="Street Address" error={fieldErrors.address} />
+                          <input
+                            type="text"
+                            required
+                            className={`w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500
+                              ${fieldErrors.address ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
+                            value={formData.address}
+                            onChange={(e) => handleInputChange('address', e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1 text-gray-700">
+                            Apt/Suite (optional)
+                          </label>
+                          <input
+                            type="text"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                            value={formData.aptSuite}
+                            onChange={(e) => handleInputChange('aptSuite', e.target.value)}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
                     <div className="grid grid-cols-3 gap-4">
-                      <div className="col-span-2">
-                        <RequiredLabel text="Street Address" error={fieldErrors.address} />
+                      <div>
+                        <RequiredLabel text="City" error={fieldErrors.city} />
+                        <input
+                          type="text"
+                          required
+                          className={`w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500
+                            ${fieldErrors.city ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
+                          value={formData.city}
+                          onChange={(e) => handleInputChange('city', e.target.value)}
+                        />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700">
-                          Apt/Suite (optional)
-                        </label>
+                        <RequiredLabel text="State" error={fieldErrors.state} />
+                        <select
+                          required
+                          className={`w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500
+                            ${fieldErrors.state ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
+                          value={formData.state}
+                          onChange={(e) => handleInputChange('state', e.target.value)}
+                        >
+                          {US_STATES.map(state => (
+                            <option key={state.value} value={state.value}>
+                              {state.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <RequiredLabel text="ZIP Code" error={fieldErrors.zipCode} />
+                        <input
+                          type="text"
+                          required
+                          className={`w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500
+                            ${fieldErrors.zipCode ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
+                          value={formData.zipCode}
+                          onChange={(e) => handleInputChange('zipCode', e.target.value)}
+                        />
                       </div>
                     </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="col-span-2">
-                      <input
-                        type="text"
-                        required
-                        className={`w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500
-                          ${fieldErrors.address ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
-                        value={formData.address}
-                        onChange={(e) => handleInputChange('address', e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <input
-                        type="text"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                        value={formData.aptSuite}
-                        onChange={(e) => handleInputChange('aptSuite', e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </div>
 
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <RequiredLabel text="City" error={fieldErrors.city} />
-                    <input
-                      type="text"
-                      required
-                      className={`w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500
-                        ${fieldErrors.city ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
-                      value={formData.city}
-                      onChange={(e) => handleInputChange('city', e.target.value)}
+                    <RadioGroup
+                      name="hasPersonalKnowledge"
+                      label="Do you have personal knowledge of the facts related to your HealthEquity account and the events surrounding this matter?"
+                      value={formData.hasPersonalKnowledge}
+                      onChange={(value) => setFormData({ ...formData, hasPersonalKnowledge: value })}
+                    />
+
+                    <RadioGroup
+                      name="canTestify"
+                      label="Could you testify competently about the facts of this case if required?"
+                      value={formData.canTestify}
+                      onChange={(value) => setFormData({ ...formData, canTestify: value })}
                     />
                   </div>
-                  <div>
-                    <RequiredLabel text="State" error={fieldErrors.state} />
-                    <select
-                      required
-                      className={`w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500
-                        ${fieldErrors.state ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
-                      value={formData.state}
-                      onChange={(e) => handleInputChange('state', e.target.value)}
-                    >
-                      {US_STATES.map(state => (
-                        <option key={state.value} value={state.value}>
-                          {state.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <RequiredLabel text="ZIP Code" error={fieldErrors.zipCode} />
-                    <input
-                      type="text"
-                      required
-                      className={`w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500
-                        ${fieldErrors.zipCode ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
-                      value={formData.zipCode}
-                      onChange={(e) => handleInputChange('zipCode', e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <RadioGroup
-                  name="hasPersonalKnowledge"
-                  label="Do you have personal knowledge of the facts related to your HealthEquity account and the events surrounding this matter?"
-                  value={formData.hasPersonalKnowledge}
-                  onChange={(value) => setFormData({ ...formData, hasPersonalKnowledge: value })}
-                />
-
-                <RadioGroup
-                  name="canTestify"
-                  label="Could you testify competently about the facts of this case if required?"
-                  value={formData.canTestify}
-                  onChange={(value) => setFormData({ ...formData, canTestify: value })}
-                />
-              </div>
-            )}
-
-            {step === 2 && (
-              <div className="space-y-6">
-                <h3 className="text-lg font-medium text-gray-900">Account Details and Data Breach Concerns</h3>
-                
-                <RadioGroup
-                  name="hadAccount"
-                  label="Did you hold an account under the custodianship of HealthEquity, Inc. or one for which HealthEquity served as the administrator before March 25, 2024?"
-                  value={formData.hadAccount}
-                  onChange={(value) => setFormData({ ...formData, hadAccount: value })}
-                />
-
-                <RadioGroup
-                  name="acceptedAgreement"
-                  label="Were you required to consent to and accept HealthEquity's Custodial Agreement to access your account?"
-                  value={formData.acceptedAgreement}
-                  onChange={(value) => setFormData({ ...formData, acceptedAgreement: value })}
-                />
-
-                <RadioGroup
-                  name="providedInfo"
-                  label="Did you provide any personal information to HealthEquity through your account (e.g., sensitive details, financial info)?"
-                  value={formData.providedInfo}
-                  onChange={(value) => setFormData({ ...formData, providedInfo: value })}
-                />
-
-                <RadioGroup
-                  name="trustedSecurity"
-                  label="Did you believe and trust that the personal information you shared with HealthEquity would be kept secure and confidential?"
-                  value={formData.trustedSecurity}
-                  onChange={(value) => setFormData({ ...formData, trustedSecurity: value })}
-                />
-
-                <RadioGroup
-                  name="believesBreached"
-                  label="Do you believe your personal information was accessed or disclosed during the data breach that HealthEquity publicly announced in July and August 2024?"
-                  value={formData.believesBreached}
-                  onChange={(value) => setFormData({ ...formData, believesBreached: value })}
-                />
-              </div>
-            )}
-
-            {step === 3 && (
-              <div className="space-y-6">
-                <h3 className="text-lg font-medium text-gray-900">Legal Representation and Authorization</h3>
-                
-                <RadioGroup
-                  name="retainedFirm"
-                  label="Have you retained the legal firm of Legal Injury Advocates to investigate if your personal information was disclosed in this breach and, if so, to pursue a recovery on your behalf?"
-                  value={formData.retainedFirm}
-                  onChange={(value) => setFormData({ ...formData, retainedFirm: value })}
-                />
-
-                <RadioGroup
-                  name="understandsLitigation"
-                  label="Do you understand that this course of action may involve litigation or arbitration, and that Legal Injury Advocates might file a petition to compel HealthEquity to arbitrate your claims according to the Custodial Agreement?"
-                  value={formData.understandsLitigation}
-                  onChange={(value) => setFormData({ ...formData, understandsLitigation: value })}
-                />
-
-                <RadioGroup
-                  name="authorizesComms"
-                  label="Do you authorize Legal Injury Advocates to communicate with HealthEquity and their legal team on your behalf about your personal information and the details of the data breach?"
-                  value={formData.authorizesComms}
-                  onChange={(value) => setFormData({ ...formData, authorizesComms: value })}
-                />
-
-                <RadioGroup
-                  name="declaresUnderPenalty"
-                  label="Do you declare that the information you've provided is true and correct, and acknowledge that this declaration is made under penalty of perjury according to U.S. and California law?"
-                  value={formData.declaresUnderPenalty}
-                  onChange={(value) => setFormData({ ...formData, declaresUnderPenalty: value })}
-                />
-              </div>
-            )}
-
-            <div className="flex justify-between pt-6 border-t">
-              {step > 1 && (
-                <button
-                  type="button"
-                  onClick={handleBack}
-                  className="px-6 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
-                >
-                  Back
-                </button>
-              )}
-              <div className="ml-auto">
-                {step < 3 ? (
-                  <button
-                    type="button"
-                    onClick={handleNextStep}
-                    className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                  >
-                    Next
-                  </button>
-                ) : (
-                  <button
-                    type="submit"
-                    className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                  >
-                    Submit Form
-                  </button>
                 )}
-              </div>
-            </div>
-          </form>
+
+                {step === 2 && (
+                  <div className="space-y-6">
+                    <h3 className="text-lg font-medium text-gray-900">Account Details and Data Breach Concerns</h3>
+                    
+                    <RadioGroup
+                      name="hadAccount"
+                      label="Did you hold an account under the custodianship of HealthEquity, Inc. or one for which HealthEquity served as the administrator before March 25, 2024?"
+                      value={formData.hadAccount}
+                      onChange={(value) => setFormData({ ...formData, hadAccount: value })}
+                    />
+
+                    <RadioGroup
+                      name="acceptedAgreement"
+                      label="Were you required to consent to and accept HealthEquity's Custodial Agreement to access your account?"
+                      value={formData.acceptedAgreement}
+                      onChange={(value) => setFormData({ ...formData, acceptedAgreement: value })}
+                    />
+
+                    <RadioGroup
+                      name="providedInfo"
+                      label="Did you provide any personal information to HealthEquity through your account (e.g., sensitive details, financial info)?"
+                      value={formData.providedInfo}
+                      onChange={(value) => setFormData({ ...formData, providedInfo: value })}
+                    />
+
+                    <RadioGroup
+                      name="trustedSecurity"
+                      label="Did you believe and trust that the personal information you shared with HealthEquity would be kept secure and confidential?"
+                      value={formData.trustedSecurity}
+                      onChange={(value) => setFormData({ ...formData, trustedSecurity: value })}
+                    />
+
+                    <RadioGroup
+                      name="believesBreached"
+                      label="Do you believe your personal information was accessed or disclosed during the data breach that HealthEquity publicly announced in July and August 2024?"
+                      value={formData.believesBreached}
+                      onChange={(value) => setFormData({ ...formData, believesBreached: value })}
+                    />
+                  </div>
+                )}
+
+                {step === 3 && (
+                  <div className="space-y-6">
+                    <h3 className="text-lg font-medium text-gray-900">Legal Representation and Authorization</h3>
+                    
+                    <RadioGroup
+                      name="retainedFirm"
+                      label="Have you retained the legal firm of Legal Injury Advocates to investigate if your personal information was disclosed in this breach and, if so, to pursue a recovery on your behalf?"
+                      value={formData.retainedFirm}
+                      onChange={(value) => setFormData({ ...formData, retainedFirm: value })}
+                    />
+
+                    <RadioGroup
+                      name="understandsLitigation"
+                      label="Do you understand that this course of action may involve litigation or arbitration, and that Legal Injury Advocates might file a petition to compel HealthEquity to arbitrate your claims according to the Custodial Agreement?"
+                      value={formData.understandsLitigation}
+                      onChange={(value) => setFormData({ ...formData, understandsLitigation: value })}
+                    />
+
+                    <RadioGroup
+                      name="authorizesComms"
+                      label="Do you authorize Legal Injury Advocates to communicate with HealthEquity and their legal team on your behalf about your personal information and the details of the data breach?"
+                      value={formData.authorizesComms}
+                      onChange={(value) => setFormData({ ...formData, authorizesComms: value })}
+                    />
+
+                    <RadioGroup
+                      name="declaresUnderPenalty"
+                      label="Do you declare that the information you've provided is true and correct, and acknowledge that this declaration is made under penalty of perjury according to U.S. and California law?"
+                      value={formData.declaresUnderPenalty}
+                      onChange={(value) => setFormData({ ...formData, declaresUnderPenalty: value })}
+                    />
+                  </div>
+                )}
+
+                <div className="flex justify-between pt-6 border-t">
+                  {step > 1 && (
+                    <button
+                      type="button"
+                      onClick={handleBack}
+                      className="px-6 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+                    >
+                      Back
+                    </button>
+                  )}
+                  <div className="ml-auto">
+                    {step < 3 ? (
+                      <button
+                        type="button"
+                        onClick={handleNextStep}
+                        className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                      >
+                        Next
+                      </button>
+                    ) : (
+                      <button
+                        type="submit"
+                        className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                      >
+                        Submit Form
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </form>
+            </>
+          )}
         </div>
       </div>
     </div>

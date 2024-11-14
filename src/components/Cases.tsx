@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface CaseCard {
@@ -68,8 +68,17 @@ const cases: CaseCard[] = [
 export default function Cases() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
-  const itemsPerPage = 3;
+  const [itemsPerPage, setItemsPerPage] = useState(window.innerWidth >= 768 ? 3 : 1);
   const totalPages = Math.ceil(cases.length / itemsPerPage);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setItemsPerPage(window.innerWidth >= 768 ? 3 : 1);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const nextSlide = () => {
     if (isAnimating) return;
@@ -132,7 +141,9 @@ export default function Cases() {
               {cases.map((caseItem, index) => (
                 <div
                   key={index}
-                  className="w-full md:w-1/3 flex-shrink-0 px-4"
+                  className={`flex-shrink-0 px-4 ${
+                    window.innerWidth >= 768 ? 'w-1/3' : 'w-full'
+                  }`}
                 >
                   <a
                     href={caseItem.link}
@@ -160,7 +171,7 @@ export default function Cases() {
               {Array.from({ length: totalPages }).map((_, index) => (
                 <button
                   key={index}
-                  onClick={() => goToPage(index)}
+                  onClick={() => goToPage(index * itemsPerPage)}
                   disabled={isAnimating}
                   className={`w-2 h-2 rounded-full transition-all duration-300 ${
                     Math.floor(currentIndex / itemsPerPage) === index
